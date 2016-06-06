@@ -1,6 +1,7 @@
 var clipMap = {
     sent_t:0,
     events:[],
+    method:'',
     x: function () {
         if (typeof XMLHttpRequest !== 'undefined') {
             return new XMLHttpRequest();
@@ -27,17 +28,17 @@ var clipMap = {
         if (async === undefined) {
             async = true;
         }
-        var x = ajax.x();
-        clipMap.x.open(method, url, async);
-        clipMap.x.onreadystatechange = function () {
-            if (clipMap.x.readyState == 4) {
-                callback(clipMap.x.responseText)
+        var x = clipMap.x();
+        x.open(method, url, async);
+        x.onreadystatechange = function () {
+            if (x.readyState == 4) {
+                callback(x.responseText)
             }
         };
         if (method == 'POST') {
-            clipMap.x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            x.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         }
-        clipMap.x.send(data)
+        x.send(data)
     },
     get: function (url, data, callback, async) {
         var query = [];
@@ -54,18 +55,28 @@ var clipMap = {
         clipMap.send(url, callback, 'POST', query.join('&'), async)
     },
     init: function(obj) {
-        this.url == (typeof obj.url !== 'undefined' ? obj.url : false);
+        this.url = (typeof obj.url !== 'undefined' ? obj.url : '');
         this.wordpress = (typeof obj.wordpress !== 'undefined' ? obj.wordpress : false);
+        this.method = (typeof obj.method !== 'undefined' ? obj.method : false);
         window.addEventListener("mousemove", function(event){
-            this.send_t++;
+            clipMap.send_t++;
             var ev = {
                 x:event.clientX,
                 y:event.clientY
             }
-            this.events.push(JSON.stringify(ev));
-            if (this.send_t > 100) {
-                this.send_t = 0;
-                clipMap.post(url, this.events, function() {});
+            clipMap.events.push(JSON.stringify(ev));
+            if (clipMap.wordpress) {
+                var post = {
+                    action :'droplet_wp_ajax',
+                    method :clipMap.method,
+                    data:clipMap.events
+                };
+            }else{
+                var post = clipMap.events;
+            }
+            if (clipMap.send_t > 100) {
+                clipMap.send_t = 0;
+                clipMap.post(clipMap.url, post, function() {});
             }
         });
         window.addEventListener("click", function(event){
@@ -78,7 +89,16 @@ var clipMap = {
                 href:event.target.getAttribute("href"),
                 src:event.target.getAttribute("src")
             }
-            clipMap.post(url, JSON.stringify(ev), function() {});
+            if (clipMap.wordpress) {
+                var post = {
+                    action :'droplet_wp_ajax',
+                    method :clipMap.method,
+                    data:JSON.stringify(ev)
+                };
+            }else{
+                var post = JSON.stringify(ev);
+            }
+            clipMap.post(clipMap.url, post, function() {});
         });
     }
 }
