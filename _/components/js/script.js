@@ -64,7 +64,7 @@ var clickMap = {
             var post = {
                 action :'droplet_wp_ajax',
                 method :clickMap.method+'_width',
-                data:JSON.stringify({width:window.screen.availWidth,height:window.screen.availHeight})
+                data:JSON.stringify({width:document.documentElement.clientWidth,height:document.documentElement.clientHeight})
             };
         }else{
             var post = JSON.stringify({width:window.screen.availWidth,height:window.screen.availHeight});
